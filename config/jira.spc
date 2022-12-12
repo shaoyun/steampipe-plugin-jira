@@ -9,4 +9,7 @@ connection "jira" {
 
   # Access Token for which to use for the API
   # token = "8WqcdT0rvIZpCjtDqReF48B1"
+
+  # pat or token
+  # auth_type = "pat"
 }

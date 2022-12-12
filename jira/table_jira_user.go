@@ -21,13 +21,13 @@ func tableUser(_ context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listUsers,
 		},
-		HydrateConfig: []plugin.HydrateConfig{
-			{
-				// Limit concurrency to avoid a 429 too many requests error
-				Func:           getUserGroups,
-				MaxConcurrency: 50,
-			},
-		},
+		//HydrateConfig: []plugin.HydrateConfig{
+		//	{
+		//		// Limit concurrency to avoid a 429 too many requests error
+		//		Func:           getUserGroups,
+		//		MaxConcurrency: 50,
+		//	},
+		//},
 		Columns: []*plugin.Column{
 			{
 				Name:        "display_name",
@@ -66,13 +66,13 @@ func tableUser(_ context.Context) *plugin.Table {
 				Description: "The avatars of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "group_names",
-				Description: "The groups that the user belongs to.",
-				Type:        proto.ColumnType_JSON,
-				Hydrate:     getUserGroups,
-				Transform:   transform.From(groupNames),
-			},
+			//{
+			//	Name:        "group_names",
+			//	Description: "The groups that the user belongs to.",
+			//	Type:        proto.ColumnType_JSON,
+			//	Hydrate:     getUserGroups,
+			//	Transform:   transform.From(groupNames),
+			//},
 
 			// Standard columns
 			{
@@ -106,7 +106,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 	last := 0
 	for {
-		apiEndpoint := fmt.Sprintf("rest/api/2/users/search?startAt=%d&maxResults=%d", last, maxResults)
+		apiEndpoint := fmt.Sprintf("rest/api/2/user/search?username=.&startAt=%d&maxResults=%d", last, maxResults)
 
 		req, err := client.NewRequest("GET", apiEndpoint, nil)
 		if err != nil {

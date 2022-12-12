@@ -9,6 +9,7 @@ type jiraConfig struct {
 	BaseUrl  *string `cty:"base_url"`
 	Username *string `cty:"username"`
 	Token    *string `cty:"token"`
+	AuthType *string `cty:"auth_type"`
 }
 
 var ConfigSchema = map[string]*schema.Attribute{
@@ -19,6 +20,9 @@ var ConfigSchema = map[string]*schema.Attribute{
 		Type: schema.TypeString,
 	},
 	"token": {
+		Type: schema.TypeString,
+	},
+	"auth_type": {
 		Type: schema.TypeString,
 	},
 }

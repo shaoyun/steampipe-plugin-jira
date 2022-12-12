@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -25,6 +26,8 @@ func connect(_ context.Context, d *plugin.QueryData) (*jira.Client, error) {
 	tokenProvider := jira.BasicAuthTransport{}
 	var baseUrl, username, token string
 
+	authType := "token"
+
 	// Prefer config options given in Steampipe
 	jiraConfig := GetConfig(d.Connection)
 
@@ -37,26 +40,41 @@ func connect(_ context.Context, d *plugin.QueryData) (*jira.Client, error) {
 	if jiraConfig.Token != nil {
 		token = *jiraConfig.Token
 	}
+	if jiraConfig.AuthType != nil {
+		authType = *jiraConfig.AuthType
+	}
+
+	var cli *http.Client
 
 	if baseUrl == "" {
 		return nil, errors.New("'base_url' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
-	if username == "" {
-		return nil, errors.New("'username' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
-	}
-	tokenProvider.Username = username
+	if authType == "pat" {
+		if token == "" {
+			return nil, errors.New("'token' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+		}
+		tp := jira.BearerAuthTransport{
+			Token: token,
+		}
+		cli = tp.Client()
+	} else {
+		if username == "" {
+			return nil, errors.New("'username' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+		}
+		tokenProvider.Username = username
 
-	if token == "" {
-		return nil, errors.New("'token' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+		if token == "" {
+			return nil, errors.New("'token' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+		}
+		tokenProvider.Password = token
+		cli = tokenProvider.Client()
 	}
-	tokenProvider.Password = token
 
 	// Create the client
-	client, err := jira.NewClient(tokenProvider.Client(), baseUrl)
+	client, err := jira.NewClient(cli, baseUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error creating Jira client: %s", err.Error())
 	}
-
 	// Save to cache
 	d.ConnectionManager.Cache.Set(cacheKey, client)
 
@@ -64,7 +82,7 @@ func connect(_ context.Context, d *plugin.QueryData) (*jira.Client, error) {
 	return client, nil
 }
 
-//// Constants
+// // Constants
 const (
 	ColumnDescriptionTitle = "Title of the resource."
 )

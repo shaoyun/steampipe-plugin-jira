@@ -153,7 +153,7 @@ func listProjects(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 	last := 0
 	for {
 		apiEndpoint := fmt.Sprintf(
-			"rest/api/3/project/search?expand=description,lead,issueTypes,url,projectKeys,permissions,insight&startAt=%d&maxResults=%d", last,
+			"rest/api/2/project?expand=description,lead,issueTypes,url,projectKeys,permissions,insight&startAt=%d&maxResults=%d", last,
 			maxResults,
 		)
 
@@ -167,7 +167,7 @@ func listProjects(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 			return nil, err
 		}
 
-		projectList := new(ProjectListResult)
+		projectList := new([]Project)
 		res, err := client.Do(req, projectList)
 		body, _ := io.ReadAll(res.Body)
 		plugin.Logger(ctx).Debug("jira_project.listProjects", "res_body", string(body))
@@ -177,17 +177,14 @@ func listProjects(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 			return nil, err
 		}
 
-		for _, project := range projectList.Values {
+		for _, project := range *projectList {
 			d.StreamListItem(ctx, project)
 			// Context may get cancelled due to manual cancellation or if the limit has been reached
 			if d.QueryStatus.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
-		last = projectList.StartAt + len(projectList.Values)
-		if projectList.IsLast {
-			return nil, nil
-		}
+		return nil, nil
 	}
 
 }

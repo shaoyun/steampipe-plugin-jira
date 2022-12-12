@@ -117,7 +117,7 @@ func listDashboards(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 
 	for {
 		apiEndpoint := fmt.Sprintf(
-			"/rest/api/3/dashboard?startAt=%d&maxResults=%d",
+			"/rest/api/2/dashboard?startAt=%d&maxResults=%d",
 			last,
 			maxResults,
 		)

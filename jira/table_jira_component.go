@@ -151,7 +151,7 @@ func listComponents(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 	}
 
 	for {
-		apiEndpoint := fmt.Sprintf("/rest/api/3/project/%s/component?startAt=%d&maxResults=%d", project.ID, last, maxResults)
+		apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/components?startAt=%d&maxResults=%d", project.ID, last, maxResults)
 
 		req, err := client.NewRequest("GET", apiEndpoint, nil)
 		if err != nil {
@@ -159,7 +159,7 @@ func listComponents(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 			return nil, err
 		}
 
-		listResult := new(ListComponentResult)
+		listResult := new([]Component)
 		res, err := client.Do(req, listResult)
 		body, _ := io.ReadAll(res.Body)
 		plugin.Logger(ctx).Debug("jira_component.listComponents", "res_body", string(body))
@@ -172,7 +172,7 @@ func listComponents(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 			return nil, err
 		}
 
-		for _, component := range listResult.Values {
+		for _, component := range *listResult {
 			d.StreamListItem(ctx, component)
 
 			// Context may get cancelled due to manual cancellation or if the limit has been reached
@@ -181,10 +181,7 @@ func listComponents(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateD
 			}
 		}
 
-		last = listResult.StartAt + len(listResult.Values)
-		if listResult.IsLast {
-			return nil, nil
-		}
+		return nil, nil
 	}
 }
 
@@ -199,7 +196,7 @@ func getComponent(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 		return nil, err
 	}
 
-	apiEndpoint := fmt.Sprintf("/rest/api/3/component/%s", componentId)
+	apiEndpoint := fmt.Sprintf("/rest/api/2/component/%s", componentId)
 
 	req, err := client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
